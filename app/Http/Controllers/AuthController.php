@@ -17,6 +17,7 @@ class AuthController extends Controller
      {
           try {
                $validator = Validator::make($request->all(), [
+                    'name' => 'required', 'string', 'max:255',
                     'email' => 'required|string|email|unique:users',
                     'password' => 'required|string|min:6',
                     'confirm_password' => 'required_with:password|same:password',
@@ -134,7 +135,6 @@ class AuthController extends Controller
      }
 
      //? Change password API
-
      public function changePassword(Request $request)
      {
           try {

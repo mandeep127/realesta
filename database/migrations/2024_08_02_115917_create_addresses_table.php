@@ -13,14 +13,14 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('properties', function (Blueprint $table) {
+        Schema::create('addresses', function (Blueprint $table) {
             $table->id();
-            $table->string("price");
-            $table->string("bedrooms");
-            $table->string("bathrooms");
-            $table->string("size");
-            $table->string("image");
-            $table->string("description");
+            $table->string("property_id");
+            $table->string("address");
+            $table->string("city");
+            $table->string("state");
+            $table->string("pincode");
+            $table->string("country");
             $table->string("created_by")->nullable();
             $table->string('status')->default(1);
             $table->string('type')->default(1);
@@ -35,6 +35,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('properties');
+        Schema::dropIfExists('addresses');
     }
 };
