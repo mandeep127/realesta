@@ -15,6 +15,10 @@ return new class extends Migration
     {
         Schema::create('property_types', function (Blueprint $table) {
             $table->id();
+            $table->string("name");
+            $table->string("created_by")->nullable();
+            $table->string('status')->default(1);
+            $table->string('type')->default(1);
             $table->timestamps();
         });
     }

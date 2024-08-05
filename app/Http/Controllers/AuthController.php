@@ -2,11 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
+use DB;
+use Carbon\Carbon;
+use Illuminate\Validation\ValidationException;
 use App\Models\User;
 use Spatie\Permission\Models\Role;
 use Exception;
@@ -187,6 +191,109 @@ class AuthController extends Controller
                return response()->json([
                     'error' => 'Internal Server Error!',
                     'code' => 500
+               ], 500);
+          }
+     }
+
+     //? forgot password
+     public function submitForgetPasswordForm(Request $request)
+     {
+          try {
+               $request->validate([
+                    'email' => 'required|email|exists:users,email',
+               ]);
+
+               // Generate a random token
+               $token = Str::random(64);
+
+               // Insert the token into the password_resets table
+               DB::table('password_resets')->insert([
+                    'email' => $request->email,
+                    'token' => $token,
+                    'created_at' => Carbon::now(),
+               ]);
+
+               return response()->json([
+                    'token' => $token,
+                    'message' => 'Token generated successfully. Check your email for further instructions.',
+                    'code' => 200,
+                    'data' => $token,
+               ], 200);
+          } catch (ValidationException $e) {
+
+               return response()->json([
+                    'message' => 'Validation failed',
+                    'errors' => $e->errors(),
+                    'code' => 422,
+                    'data' => [],
+               ], 422);
+          } catch (\Exception $e) {
+
+               return response()->json([
+                    'message' => 'An error occurred while processing your request',
+                    'error' => $e->getMessage(),
+                    'code' => 500,
+                    'data' => [],
+               ], 500);
+          }
+     }
+
+     //? password reset link view function (with token verify)
+     public function submitResetPasswordForm(Request $request)
+     {
+          try {
+               $request->validate([
+                    'password' => 'required|string|min:6|confirmed',
+                    'password_confirmation' => 'required'
+               ]);
+
+               // Get the email from the password_resets table using the token
+               $resetInfo = DB::table('password_resets')
+                    ->where('token', $request->token)
+                    ->first();
+
+               if (!$resetInfo) {
+                    return response()->json([
+                         'error' => 'Invalid token!',
+                         'code' => 400,
+                         'data' => [],
+                    ], 400);
+               }
+
+               // Update the password for the user with the fetched email
+               $user = User::where('email', $resetInfo->email)->first();
+               if (!$user) {
+                    return response()->json([
+                         'error' => 'User not found!',
+                         'code' => 404,
+                         'data' => [],
+                    ], 404);
+               }
+
+               $user->password = Hash::make($request->password);
+               $user->save();
+
+               // Delete the password reset token from the database
+               DB::table('password_resets')->where('email', $resetInfo->email)->delete();
+
+               return response()->json([
+                    'message' => 'Your password has been changed!',
+                    'code' => 200,
+                    'data' => $user,
+               ], 200);
+          } catch (ValidationException $e) {
+               return response()->json([
+                    'message' => 'Validation failed',
+                    'errors' => $e->errors(),
+                    'code' => 422,
+                    'data' => [],
+               ], 422);
+          } catch (\Exception $e) {
+               return response()->json([
+                    'error' => 'An error occurred while processing your request',
+                    'message' => $e->getMessage(),
+                    'code' => 500,
+                    'data' => [],
                ], 500);
           }
      }
