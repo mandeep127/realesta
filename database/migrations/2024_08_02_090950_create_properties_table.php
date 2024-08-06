@@ -15,12 +15,18 @@ return new class extends Migration
     {
         Schema::create('properties', function (Blueprint $table) {
             $table->id();
+            $table->string("property_type_id");
             $table->string("price");
             $table->string("bedrooms");
             $table->string("bathrooms");
             $table->string("size");
             $table->string("image");
             $table->string("description");
+            $table->string("address");
+            $table->string("city");
+            $table->string("state");
+            $table->string("pincode");
+            $table->string("country");
             $table->string("created_by")->nullable();
             $table->string('status')->default(1);
             $table->string('type')->default(1);
