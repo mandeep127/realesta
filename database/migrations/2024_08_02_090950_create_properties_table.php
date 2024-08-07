@@ -15,7 +15,8 @@ return new class extends Migration
     {
         Schema::create('properties', function (Blueprint $table) {
             $table->id();
-            $table->string("property_type_id");
+            $table->string("user_id")->nullable();
+            $table->string("property_type_id")->nullable();
             $table->string("price");
             $table->string("bedrooms");
             $table->string("bathrooms");

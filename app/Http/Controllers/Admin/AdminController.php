@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Property;
+use App\Models\User;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
@@ -16,16 +17,29 @@ class AdminController extends Controller
     public function showNewProperties()
     {
         try {
-            $properties = Property::where('created_at', '>', now()->subMonth())
+            // Fetch new properties
+            $properties = Property::inRandomOrder()
+                ->limit(3)
+                ->get();
+
+            // Fetch new users of type 2
+            $users = User::where('type', 2)
+                ->where('created_at', '>', now()->subMonth())
                 ->orderBy('created_at', 'desc')
                 ->get();
 
             return response()->json([
-                'msg' => 'New properties fetched successfully!',
+                'msg' => 'New properties and users fetched successfully!',
                 'code' => 200,
-                'data' => $properties,
+                'data' => [
+                    'properties' => $properties,
+                    'users' => $users,
+                ],
             ]);
         } catch (\Exception $e) {
+            // Log the exception message
+            \Log::error($e->getMessage());
+
             return response()->json([
                 'msg' => 'An unexpected error occurred',
                 'code' => 500,
@@ -33,6 +47,7 @@ class AdminController extends Controller
             ], 500);
         }
     }
+
 
     // Add a new property for buy or sell
     public function addProperty(Request $request)

@@ -31,7 +31,12 @@ Route::post('/forgot-password', [AuthController::class, 'submitForgetPasswordFor
 Route::post('/reset-password', [AuthController::class, 'submitResetPasswordForm']);
 Route::get("/home", [PropertyController::class, 'index']);
 Route::get("/property", [PropertyController::class, 'show']);
-Route::get("/property/{address}/{id}", [PropertyController::class, 'details']);
+// Route::get("/property/{address}/{id}", [PropertyController::class, 'details']);
+Route::get("/property/{id}", [PropertyController::class, 'details']);
+//add properties
+Route::post("/add-property", [PropertyController::class, 'store']);
+//property-types
+Route::get("/property-types", [PropertyController::class, 'propertyTypes']);
 
 //? Admin APIs routes
 Route::post('/admin/login', [LoginController::class, 'login']);
