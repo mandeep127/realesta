@@ -37,6 +37,8 @@ Route::get("/property/{id}", [PropertyController::class, 'details']);
 Route::post("/add-property", [PropertyController::class, 'store']);
 //property-types
 Route::get("/property-types", [PropertyController::class, 'propertyTypes']);
+//filterProperties
+Route::get("/filter-properties", [PropertyController::class, 'filterProperties']);
 
 //? Admin APIs routes
 Route::post('/admin/login', [LoginController::class, 'login']);
@@ -47,4 +49,4 @@ Route::post('/admin/property', [AdminController::class, 'addProperty']);
 //show Property details
 Route::get('/admin/property/{id}', [AdminController::class, 'showPropertyDetails']);
 //change Property status
-Route::put('/admin/property/{id}/status', [AdminController::class, 'changeStatus']);
+Route::get('/admin/property/status/{id}', [AdminController::class, 'changeStatus']);

@@ -298,4 +298,70 @@ class PropertyController extends Controller
                ], 500);
           }
      }
+
+     public function filterProperties(Request $request)
+     {
+          try {
+               $query = Property::query();
+
+               // Filter by property type, if provided and valid
+               $propertyTypeIds = $request->input('property_type_id');
+               if (!empty($propertyTypeIds)) {
+                    // Convert comma-separated IDs into an array
+                    $propertyTypeIds = explode(',', $propertyTypeIds);
+
+                    // Ensure IDs are integers
+                    $propertyTypeIds = array_map('intval', $propertyTypeIds);
+
+                    // Only allow 1 (Residential) and 2 (MultiFamily)
+                    if (array_intersect($propertyTypeIds, [1, 2])) {
+                         $query->whereIn('property_type_id', $propertyTypeIds);
+                    } else {
+                         return response()->json(['error' => 'Invalid property type.'], 400);
+                    }
+               }
+
+               // Filter by price range
+               $minPrice = $request->input('min_price');
+               $maxPrice = $request->input('max_price');
+
+               if (!empty($minPrice) && is_numeric($minPrice)) {
+                    $query->where('price', '>=', $minPrice);
+               }
+               if (!empty($maxPrice) && is_numeric($maxPrice)) {
+                    $query->where('price', '<=', $maxPrice);
+               }
+
+               // Filter by bedroom range
+               $minBedrooms = $request->input('min_bedrooms');
+               $maxBedrooms = $request->input('max_bedrooms');
+
+               if (!empty($minBedrooms) && is_numeric($minBedrooms)) {
+                    $query->where('bedrooms', '>=', $minBedrooms);
+               }
+               if (!empty($maxBedrooms) && is_numeric($maxBedrooms)) {
+                    $query->where('bedrooms', '<=', $maxBedrooms);
+               }
+
+               // Execute the query and get the results
+               $properties = $query->get();
+
+               // Check if properties are found
+               if ($properties->isEmpty()) {
+                    return response()->json(['message' => 'No properties found matching the criteria.'], 404);
+               }
+
+               return response()->json([
+                    'success' => true,
+                    'message' => 'Properties successfully fetched.',
+                    'data' => $properties
+               ], 200);
+          } catch (\Exception $e) {
+               // Handle any exceptions that occur
+               return response()->json([
+                    'success' => false,
+                    'error' => 'An error occurred while filtering properties: ' . $e->getMessage()
+               ], 500);
+          }
+     }
 }

@@ -93,13 +93,49 @@ class AdminController extends Controller
         }
     }
 
+    public function details($id)
+    {
+        try {
+            $property = Property::find($id);
+
+            if (!$property) {
+                return response()->json([
+                    'error' => 'Property not found',
+                    'code' => 404,
+                    'data' => [],
+                ], 404);
+            }
+
+            // Fetch related images 
+            // $property_sub_images = PropertySubImages::where('property_id', $property_id)->take(5)->get();
+
+
+            return response()->json([
+                'message' => 'Successfully retrieved property details',
+                'code' => 200,
+                'data' => [
+                    'property' => $property,
+                    // 'property_sub_images' => $property_sub_images,
+
+                ]
+            ], 200);
+        } catch (\Exception $e) {
+            // Handle exceptions and return error response
+            return response()->json([
+                'error' => 'An error occurred while processing your request',
+                'message' => $e->getMessage(),
+                'code' => 500,
+                'data' => [],
+            ], 500);
+        }
+    }
 
     // Show full details of a specific property
     public function showPropertyDetails($id)
     {
         try {
             // Find the property by ID
-            $property = Property::findOrFail($id);
+            $property = Property::find($id);
 
             return response()->json([
                 'msg' => 'Property details fetched successfully!',
