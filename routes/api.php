@@ -49,4 +49,4 @@ Route::post('/admin/property', [AdminController::class, 'addProperty']);
 //show Property details
 Route::get('/admin/property/{id}', [AdminController::class, 'showPropertyDetails']);
 //change Property status
-Route::get('/admin/property/status/{id}', [AdminController::class, 'changeStatus']);
+Route::get('/admin/property/{id}/status', [AdminController::class, 'changeStatus']);

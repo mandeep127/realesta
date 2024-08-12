@@ -15,6 +15,8 @@ return new class extends Migration
     {
         Schema::create('sub_images', function (Blueprint $table) {
             $table->id();
+            $table->string('property_id');
+            $table->string('sub_images');
             $table->timestamps();
         });
     }

@@ -8,4 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 class SubImages extends Model
 {
     use HasFactory;
+    protected $fillable = [
+        'property_id',
+        'sub_images',
+    ];
 }

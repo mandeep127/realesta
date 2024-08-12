@@ -163,7 +163,7 @@ class AdminController extends Controller
     {
         // Validate the request
         $validator = Validator::make($request->all(), [
-            'status' => 'required|string|max:50', // Status could be 'available', 'sold', etc.
+            'status' => 'required|string|max:1',
         ]);
 
         if ($validator->fails()) {
