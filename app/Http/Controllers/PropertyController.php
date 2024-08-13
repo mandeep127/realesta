@@ -11,7 +11,7 @@ use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Validator;
 use App\Models\PropertyType;
 use App\Models\SubImages;
-
+use App\Models\User;
 
 class PropertyController extends Controller
 {
@@ -238,14 +238,16 @@ class PropertyController extends Controller
                     'user_id' => $userId,
                ]);
 
+               // Update user type to 3
+               User::where('id', $userId)->update(['user_type' => 3]);
+
                $subImages = [];
                if ($request->hasFile('sub_images')) {
                     foreach ($request->file('sub_images') as $subImage) {
                          $filename = time() . '_' . $subImage->getClientOriginalName();
-                         $destinationPath = 'public/images/sub';
+                         $destinationPath = 'public/images/sub_images';
                          $subImage->move(public_path($destinationPath), $filename);
                          $path = $destinationPath . '/' . $filename;
-
                          // Store in the database
                          $subImageRecord = SubImages::create([
                               'property_id' => $property->id,
@@ -254,6 +256,8 @@ class PropertyController extends Controller
 
                          $subImages[] = $subImageRecord;
                     }
+               } else {
+                    throw new \Exception('sub-images not selected.');
                }
 
                // Return success response
@@ -281,7 +285,6 @@ class PropertyController extends Controller
                ], 500);
           }
      }
-
      //properties details
      public function details($id)
      {
@@ -297,16 +300,14 @@ class PropertyController extends Controller
                }
 
                // Fetch related images 
-               // $property_sub_images = PropertySubImages::where('property_id', $property_id)->take(5)->get();
-
+               $property_sub_images = SubImages::where('property_id', $id)->take(5)->get();
 
                return response()->json([
                     'message' => 'Successfully retrieved property details',
                     'code' => 200,
                     'data' => [
                          'property' => $property,
-                         // 'property_sub_images' => $property_sub_images,
-
+                         'property_sub_images' => $property_sub_images,
                     ]
                ], 200);
           } catch (\Exception $e) {
@@ -319,6 +320,7 @@ class PropertyController extends Controller
                ], 500);
           }
      }
+
 
      //      public function filterProperties(Request $request)
      // {

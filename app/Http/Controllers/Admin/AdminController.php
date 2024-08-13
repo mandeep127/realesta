@@ -18,8 +18,9 @@ class AdminController extends Controller
     {
         try {
             // Fetch new properties
-            $properties = Property::inRandomOrder()
-                ->limit(3)
+            $properties = Property::where('status', '1')
+                ->inRandomOrder()
+                ->limit(5)
                 ->get();
 
             // Fetch new users of type 2
@@ -34,6 +35,31 @@ class AdminController extends Controller
                 'data' => [
                     'properties' => $properties,
                     'users' => $users,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            // Log the exception message
+            \Log::error($e->getMessage());
+
+            return response()->json([
+                'msg' => 'An unexpected error occurred',
+                'code' => 500,
+                'data' => [],
+            ], 500);
+        }
+    }
+
+    public function fetchAllProperties(Request $request)
+    {
+        try {
+            $perPage = 10;
+            $properties = Property::paginate($perPage);
+
+            return response()->json([
+                'msg' => 'Properties fetched successfully!',
+                'code' => 200,
+                'data' => [
+                    'properties' => $properties,
                 ],
             ]);
         } catch (\Exception $e) {
@@ -93,66 +119,94 @@ class AdminController extends Controller
         }
     }
 
-    public function details($id)
-    {
-        try {
-            $property = Property::find($id);
+    // public function details($id)
+    // {
+    //     try {
+    //         $property = Property::find($id);
 
-            if (!$property) {
-                return response()->json([
-                    'error' => 'Property not found',
-                    'code' => 404,
-                    'data' => [],
-                ], 404);
-            }
+    //         if (!$property) {
+    //             return response()->json([
+    //                 'error' => 'Property not found',
+    //                 'code' => 404,
+    //                 'data' => [],
+    //             ], 404);
+    //         }
 
-            // Fetch related images 
-            // $property_sub_images = PropertySubImages::where('property_id', $property_id)->take(5)->get();
+    //         // Fetch related images 
+    //         // $property_sub_images = PropertySubImages::where('property_id', $property_id)->take(5)->get();
 
 
-            return response()->json([
-                'message' => 'Successfully retrieved property details',
-                'code' => 200,
-                'data' => [
-                    'property' => $property,
-                    // 'property_sub_images' => $property_sub_images,
+    //         return response()->json([
+    //             'message' => 'Successfully retrieved property details',
+    //             'code' => 200,
+    //             'data' => [
+    //                 'property' => $property,
+    //                 // 'property_sub_images' => $property_sub_images,
 
-                ]
-            ], 200);
-        } catch (\Exception $e) {
-            // Handle exceptions and return error response
-            return response()->json([
-                'error' => 'An error occurred while processing your request',
-                'message' => $e->getMessage(),
-                'code' => 500,
-                'data' => [],
-            ], 500);
-        }
-    }
+    //             ]
+    //         ], 200);
+    //     } catch (\Exception $e) {
+    //         // Handle exceptions and return error response
+    //         return response()->json([
+    //             'error' => 'An error occurred while processing your request',
+    //             'message' => $e->getMessage(),
+    //             'code' => 500,
+    //             'data' => [],
+    //         ], 500);
+    //     }
+    // }
 
     // Show full details of a specific property
     public function showPropertyDetails($id)
     {
         try {
             // Find the property by ID
-            $property = Property::find($id);
+            $property = Property::findOrFail($id);
 
+            // Retrieve user_id from the property
+            $userId = $property->user_id;
+
+            // Fetch user details using user_id
+            $user = User::find($userId);
+
+            // Check if user exists
+            if (!$user) {
+                return response()->json([
+                    'msg' => 'User associated with the property not found',
+                    'code' => 404,
+                    'data' => [
+                        'property' => $property,
+                        'user' => null,
+                    ],
+                ], 404);
+            }
+
+            // Return property and user details
             return response()->json([
                 'msg' => 'Property details fetched successfully!',
                 'code' => 200,
-                'data' => $property,
+                'data' => [
+                    'property' => $property,
+                    'user' => $user,
+                ],
             ]);
         } catch (ModelNotFoundException $e) {
             return response()->json([
                 'msg' => 'Property not found',
                 'code' => 404,
-                'data' => [],
+                'data' => [
+                    'property' => null,
+                    'user' => null,
+                ],
             ], 404);
         } catch (\Exception $e) {
             return response()->json([
                 'msg' => 'An unexpected error occurred',
                 'code' => 500,
-                'data' => [],
+                'data' => [
+                    'property' => null,
+                    'user' => null,
+                ],
             ], 500);
         }
     }
@@ -198,6 +252,134 @@ class AdminController extends Controller
                 'msg' => 'An unexpected error occurred',
                 'code' => 500,
                 'data' => [],
+            ], 500);
+        }
+    }
+
+    public function fetchUsers(Request $request)
+    {
+        try {
+            $perPage = 10;
+            $currentPage = $request->input('page', 1);
+
+            $users = User::whereIn('type', [2, 3])
+                ->paginate($perPage, ['*'], 'page', $currentPage);
+
+            return response()->json([
+                'msg' => 'Users fetched successfully!',
+                'code' => 200,
+                'data' => [
+                    'users' => $users->items(),
+                    'pagination' => [
+                        'total' => $users->total(),
+                        'current_page' => $users->currentPage(),
+                        'last_page' => $users->lastPage(),
+                        'per_page' => $users->perPage(),
+                    ],
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'msg' => 'An unexpected error occurred',
+                'code' => 500,
+                'data' => [
+                    'users' => [],
+                    'pagination' => [
+                        'total' => 0,
+                        'current_page' => 1,
+                        'last_page' => 1,
+                        'per_page' => 10,
+                    ],
+                ],
+            ], 500);
+        }
+    }
+
+
+    // public function fetchSellerUsers(Request $request)
+    // {
+    //     try {
+    //         // Define the number of users per page
+    //         $perPage = 10;
+
+    //         // Get the current page from the request, defaulting to 1
+    //         $currentPage = $request->input('page', 1);
+
+    //         // Fetch users of type 3 with pagination
+    //         $users = User::where('type', 3)
+    //             ->paginate($perPage, ['*'], 'page', $currentPage);
+
+    //         // Return paginated user details
+    //         return response()->json([
+    //             'msg' => 'Users fetched successfully!',
+    //             'code' => 200,
+    //             'data' => [
+    //                 'users' => $users->items(),
+    //                 'pagination' => [
+    //                     'total' => $users->total(),
+    //                     'current_page' => $users->currentPage(),
+    //                     'last_page' => $users->lastPage(),
+    //                     'per_page' => $users->perPage(),
+    //                 ],
+    //             ],
+    //         ]);
+    //     } catch (\Exception $e) {
+    //         return response()->json([
+    //             'msg' => 'An unexpected error occurred',
+    //             'code' => 500,
+    //             'data' => [
+    //                 'users' => [],
+    //                 'pagination' => [
+    //                     'total' => 0,
+    //                     'current_page' => 1,
+    //                     'last_page' => 1,
+    //                     'per_page' => 10,
+    //                 ],
+    //             ],
+    //         ], 500);
+    //     }
+    // }
+
+    public function showUserDetails($id, Request $request)
+    {
+        // Retrieve the current page from the request, defaulting to 1 if not provided
+        $currentPage = $request->input('page', 1);
+        $perPage = 10; // Number of properties per page
+
+        try {
+            // Find the user by ID
+            $user = User::findOrFail($id);
+
+            // Fetch paginated properties associated with the user
+            $properties = Property::where('user_id', $id)
+                ->limit(5)
+                ->get();
+
+            return response()->json([
+                'msg' => 'User and paginated properties fetched successfully!',
+                'code' => 200,
+                'data' => [
+                    'user' => $user,
+                    'properties' => $properties,
+                ],
+            ]);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'msg' => 'User not found',
+                'code' => 404,
+                'data' => [
+                    'user' => null,
+                    'properties' => [],
+                ],
+            ], 404);
+        } catch (\Exception $e) {
+            return response()->json([
+                'msg' => 'An unexpected error occurred',
+                'code' => 500,
+                'data' => [
+                    'user' => null,
+                    'properties' => [],
+                ],
             ], 500);
         }
     }

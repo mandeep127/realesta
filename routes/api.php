@@ -44,9 +44,17 @@ Route::get("/filter-properties", [PropertyController::class, 'filterProperties']
 Route::post('/admin/login', [LoginController::class, 'login']);
 //show NewProperties
 Route::get('/admin/home', [AdminController::class, 'showNewProperties']);
+//show all properties
+Route::get('/admin/properties', [AdminController::class, 'fetchAllProperties']);
 //add New Property
 Route::post('/admin/property', [AdminController::class, 'addProperty']);
 //show Property details
 Route::get('/admin/property/{id}', [AdminController::class, 'showPropertyDetails']);
 //change Property status
 Route::get('/admin/property/{id}/status', [AdminController::class, 'changeStatus']);
+//showUserDetails
+Route::get('/admin/user/{id}', [AdminController::class, 'showUserDetails']);
+//fetchBuyerUsers
+Route::get('/admin/users', [AdminController::class, 'fetchUsers']);
+//fetchSellerUsers
+// Route::get('/admin/users/Seller', [AdminController::class, 'fetchSellerUsers']);
