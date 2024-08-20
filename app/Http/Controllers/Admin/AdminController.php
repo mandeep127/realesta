@@ -19,8 +19,9 @@ class AdminController extends Controller
         try {
             // Fetch new properties
             $properties = Property::where('status', '1')
-                ->inRandomOrder()
-                ->limit(5)
+                ->where('created_at', '>', now()->subMonth())
+                ->orderBy('created_at', 'desc')
+                ->limit(10)
                 ->get();
 
             // Fetch new users of type 2

@@ -25,12 +25,11 @@ use App\Http\Controllers\PropertyController;
 //? user APIs routes
 Route::post('/register', [AuthController::class, 'registerSubmit']);
 Route::post('/login', [AuthController::class, 'loginSubmit']);
-Route::post('/logout', [AuthController::class, 'logout']);
 Route::post('/change-password', [AuthController::class, 'changePassword']);
 Route::post('/forgot-password', [AuthController::class, 'submitForgetPasswordForm']);
 Route::post('/reset-password', [AuthController::class, 'submitResetPasswordForm']);
 Route::get("/home", [PropertyController::class, 'index']);
-Route::get("/property", [PropertyController::class, 'show']);
+// Route::get("/property", [PropertyController::class, 'show']);
 // Route::get("/property/{address}/{id}", [PropertyController::class, 'details']);
 Route::get("/property/{id}", [PropertyController::class, 'details']);
 //add properties
@@ -40,21 +39,34 @@ Route::get("/property-types", [PropertyController::class, 'propertyTypes']);
 //filterProperties
 Route::get("/filter-properties", [PropertyController::class, 'filterProperties']);
 
-//? Admin APIs routes
+
+Route::group(['middleware' => ['auth:api']], function () {
+     Route::group(['middleware' => ['role:User']], function () {
+
+
+          Route::post('/logout', [AuthController::class, 'logoutSubmit']);
+     });
+
+     Route::group(['middleware' => ['role:Admin']], function () {
+          //? Admin APIs routes
+
+          Route::post('/admin/logout', [LoginController::class, 'logout']);
+          //show NewProperties
+          Route::get('/admin/home', [AdminController::class, 'showNewProperties']);
+          //show all properties
+          Route::get('/admin/properties', [AdminController::class, 'fetchAllProperties']);
+          //add New Property
+          Route::post('/admin/property', [AdminController::class, 'addProperty']);
+          //show Property details
+          Route::get('/admin/property/{id}', [AdminController::class, 'showPropertyDetails']);
+          //change Property status
+          Route::get('/admin/property/{id}/status', [AdminController::class, 'changeStatus']);
+          //showUserDetails
+          Route::get('/admin/user/{id}', [AdminController::class, 'showUserDetails']);
+          //fetchBuyerUsers
+          Route::get('/admin/users', [AdminController::class, 'fetchUsers']);
+          //fetchSellerUsers
+          // Route::get('/admin/users/Seller', [AdminController::class, 'fetchSellerUsers']);
+     });
+});
 Route::post('/admin/login', [LoginController::class, 'login']);
-//show NewProperties
-Route::get('/admin/home', [AdminController::class, 'showNewProperties']);
-//show all properties
-Route::get('/admin/properties', [AdminController::class, 'fetchAllProperties']);
-//add New Property
-Route::post('/admin/property', [AdminController::class, 'addProperty']);
-//show Property details
-Route::get('/admin/property/{id}', [AdminController::class, 'showPropertyDetails']);
-//change Property status
-Route::get('/admin/property/{id}/status', [AdminController::class, 'changeStatus']);
-//showUserDetails
-Route::get('/admin/user/{id}', [AdminController::class, 'showUserDetails']);
-//fetchBuyerUsers
-Route::get('/admin/users', [AdminController::class, 'fetchUsers']);
-//fetchSellerUsers
-// Route::get('/admin/users/Seller', [AdminController::class, 'fetchSellerUsers']);

@@ -112,7 +112,7 @@ class AuthController extends Controller
      }
 
      //? logout API
-     public function logout(Request $request)
+     public function logoutSubmit(Request $request)
      {
           try {
                $user = $request->user();
