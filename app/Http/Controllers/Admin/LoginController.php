@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Models\User;
 
 class LoginController extends Controller
 {
@@ -56,6 +57,32 @@ class LoginController extends Controller
                 'code' => 500,
                 'errors' => $e->getMessage(),
                 'data' => [],
+            ], 500);
+        }
+    }
+    //? logout API
+    public function logout(Request $request)
+    {
+        try {
+            $user = $request->user();
+
+            if (!$user) {
+                return response()->json([
+                    'error' => 'Admin not found.',
+                    'code' => 404
+                ], 404);
+            }
+            $user->token()->revoke();
+            Auth::logout();
+
+            return response()->json([
+                'message' => 'Logged out successfully.',
+                'code' => 200
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'error' => 'Internal Server Error!',
+                'code' => 500
             ], 500);
         }
     }

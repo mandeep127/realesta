@@ -23,7 +23,8 @@ class PropertyController extends Controller
                //      ->limit(3)
                //      ->get();
 
-               $properties = Property::where('created_at', '>', Carbon::now()->subMonth()->startOfMonth())
+               $properties = Property::where('status', '1')
+                    ->where('created_at', '>', now()->subMonth())
                     ->orderBy('created_at', 'desc')
                     ->limit(4)
                     ->get();
@@ -46,71 +47,54 @@ class PropertyController extends Controller
      }
 
      // Property Details View 
-     public function show(Request $request)
-     {
-          try {
-               // Check if 'keyword' is provided
-               $keyword = $request->input('keyword');
-               if (!($keyword)) {
-                    return response()->json([
-                         'msg' => 'The keyword parameter is required.',
-                         'code' => 400,
-                         'data' => [],
-                    ], 400);
-               }
+     // public function show(Request $request)
+     // {
+     //      $keyword = $request->input('keyword', '');
+     //      $propertyType = $request->input('property_type', 'all');
 
-               // Retrieve 'keyword' from the request
-               $keyword = $request->input('keyword');
+     //      // Build the query
+     //      $query = Property::query();
 
-               // Initialize the query
-               $query = Property::query();
+     //      // Filter by property type if provided and not 'all'
+     //      if ($propertyType && $propertyType !== 'all') {
+     //           $query->where('property_type_id', $propertyType);
+     //      }
 
-               // Filter by property type if provided
-               if ($request->has('property_type')) {
-                    $query->where('property_type_id', $request->input('property_type'));
-               }
+     //      // Add search conditions
+     //      if (!empty($keyword)) {
+     //           $query->where(function ($q) use ($keyword) {
+     //                $q->where('address', 'LIKE', "%{$keyword}%")
+     //                     ->orWhere('city', 'LIKE', "%{$keyword}%")
+     //                     ->orWhere('state', 'LIKE', "%{$keyword}%")
 
-               // Add multiple 'where' clauses to search across different columns
-               $query->where(function ($q) use ($keyword) {
-                    $q->where('address', 'LIKE', "%{$keyword}%")
-                         ->orWhere('city', 'LIKE', "%{$keyword}%")
-                         ->orWhere('state', 'LIKE', "%{$keyword}%")
-                         ->orWhere('zip', 'LIKE', "%{$keyword}%")
-                         ->orWhere('country', 'LIKE', "%{$keyword}%")
-                         ->orWhere('price', 'LIKE', "%{$keyword}%")
-                         ->orWhere('bedrooms', 'LIKE', "%{$keyword}%")
-                         ->orWhere('bathrooms', 'LIKE', "%{$keyword}%")
-                         ->orWhere('size', 'LIKE', "%{$keyword}%")
-                         ->orWhere('type', 'LIKE', "%{$keyword}%");
-               });
+     //                     ->orWhere('country', 'LIKE', "%{$keyword}%");
+     //           });
+     //      }
 
-               $properties = $query->get();
+     //      // Execute the query
+     //      $properties = $query->get();
 
-               return response()->json([
-                    'msg' => 'Properties fetched successfully!',
-                    'code' => 200,
-                    'data' => $properties,
-               ]);
-          } catch (ModelNotFoundException $e) {
-               return response()->json([
-                    'msg' => 'Properties not found',
-                    'code' => 404,
-                    'data' => [],
-               ], 404);
-          } catch (QueryException $e) {
-               return response()->json([
-                    'msg' => 'Database query error',
-                    'code' => 500,
-                    'data' => [],
-               ], 500);
-          } catch (\Exception $e) {
-               return response()->json([
-                    'msg' => 'An unexpected error occurred',
-                    'code' => 500,
-                    'data' => [],
-               ], 500);
-          }
-     }
+     //      // Check if no properties were found
+     //      if ($properties->isEmpty()) {
+     //           return response()->json([
+     //                'msg' => 'Property not found for the given search criteria',
+     //                'code' => 404,
+     //                'data' => [],
+     //           ], 404);
+     //      }
+
+     //      return response()->json([
+     //           'msg' => 'Properties fetched successfully!',
+     //           'code' => 200,
+     //           'data' => $properties,
+     //      ]);
+     // }
+
+
+
+
+
+
 
      // public function details($address, $id)
      // {
@@ -386,19 +370,57 @@ class PropertyController extends Controller
      public function filterProperties(Request $request)
      {
           try {
-               // Fetch all properties without applying any filters
-               $properties = Property::all();
+               // Retrieve parameters from the request
+               $keyword = $request->input('keyword', '');
+               $propertyTypeId = $request->input('property_type_id', '');
 
+               // Start the query
+               $query = Property::query();
+
+               // Filter by property type if provided and not empty
+               if (!empty($propertyTypeId)) {
+                    $query->where('property_type_id', $propertyTypeId);
+               }
+
+               // Add search conditions based on keyword
+               if (!empty($keyword)) {
+                    $query->where(function ($q) use ($keyword) {
+                         $q->where('address', 'LIKE', "%{$keyword}%")
+                              ->orWhere('city', 'LIKE', "%{$keyword}%")
+                              ->orWhere('state', 'LIKE', "%{$keyword}%")
+                              ->orWhere('pincode', 'LIKE', "%{$keyword}%")
+                              ->orWhere('country', 'LIKE', "%{$keyword}%");
+                    });
+               }
+
+               // Optionally, log the query for debugging
+               // \Log::info('Property Query: ' . $query->toSql(), $query->getBindings());
+
+               // Execute the query
+               $properties = $query->get();
+
+               // Check if properties were found
+               if ($properties->isEmpty()) {
+                    return response()->json([
+                         'msg' => 'Property not found for the given search criteria',
+                         'code' => 404,
+                         'data' => [],
+                    ], 404);
+               }
+
+               // Return the properties in the response
                return response()->json([
-                    'success' => true,
-                    'message' => 'Properties successfully fetched.',
-                    'data' => $properties
-               ], 200);
+                    'msg' => 'Properties fetched successfully!',
+                    'code' => 200,
+                    'data' => $properties,
+               ]);
           } catch (\Exception $e) {
-               // Handle any exceptions that occur
+               // Log the exception and return an error response
+               \Log::error('Error fetching properties: ' . $e->getMessage());
                return response()->json([
-                    'success' => false,
-                    'error' => 'An error occurred while fetching properties: ' . $e->getMessage()
+                    'msg' => 'An unexpected error occurred',
+                    'code' => 500,
+                    'data' => [],
                ], 500);
           }
      }
