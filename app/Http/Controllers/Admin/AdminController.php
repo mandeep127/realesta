@@ -25,10 +25,12 @@ class AdminController extends Controller
                 ->get();
 
             // Fetch new users of type 2
-            $users = User::where('type', 2)
-                ->where('created_at', '>', now()->subMonth())
-                ->orderBy('created_at', 'desc')
+            $users = User::where('type', '<>', '1') // Exclude users with type '1'
+                ->where('created_at', '>', now()->subMonth()) // Filter by creation date
+                ->orderBy('created_at', 'desc') // Order by creation date
+                ->limit(10) // Limit the results to 10
                 ->get();
+
 
             return response()->json([
                 'msg' => 'New properties and users fetched successfully!',
@@ -51,14 +53,12 @@ class AdminController extends Controller
     }
 
     // property section view active property
-    public function activeProperty(){
+    public function activeProperty()
+    {
         try {
-            
-            $itemsPerPage = 10; 
-            // Paginate the results
-            $properties = Property::where('status', '1')
-                ->paginate($itemsPerPage);
-    
+            $itemsPerPage = 10;
+            $properties = Property::paginate($itemsPerPage);
+
             return response()->json([
                 'message' => 'Successfully! Fetching Items',
                 'code' => 200,
@@ -73,7 +73,7 @@ class AdminController extends Controller
             ], 500);
         }
     }
-    
+
 
 
     // Add a new property for buy or sell
