@@ -46,6 +46,8 @@ Route::post('/admin/login', [LoginController::class, 'login']);
 Route::get('/admin/home', [AdminController::class, 'showNewProperties']);
 //show all properties
 Route::get('/admin/properties', [AdminController::class, 'fetchAllProperties']);
+//activeProperty
+Route::get('/admin/property/active', [AdminController::class, 'activeProperty']);
 //add New Property
 Route::post('/admin/property', [AdminController::class, 'addProperty']);
 //show Property details

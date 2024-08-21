@@ -49,30 +49,30 @@ class AdminController extends Controller
         }
     }
 
-    public function fetchAllProperties(Request $request)
-    {
+    // property section view active property
+    public function activeProperty(){
         try {
-            $perPage = 10;
-            $properties = Property::paginate($perPage);
-
+            
+            $itemsPerPage = 10; 
+            // Paginate the results
+            $properties = Property::where('status', '1')
+                ->paginate($itemsPerPage);
+    
             return response()->json([
-                'msg' => 'Properties fetched successfully!',
+                'message' => 'Successfully! Fetching Items',
                 'code' => 200,
-                'data' => [
-                    'properties' => $properties,
-                ],
+                'data' => $properties,
             ]);
         } catch (\Exception $e) {
-            // Log the exception message
-            \Log::error($e->getMessage());
-
             return response()->json([
-                'msg' => 'An unexpected error occurred',
+                'message' => 'An error occurred while fetching the items.',
                 'code' => 500,
+                'error' => $e->getMessage(),
                 'data' => [],
             ], 500);
         }
     }
+    
 
 
     // Add a new property for buy or sell

@@ -183,6 +183,7 @@ class PropertyController extends Controller
 
      public function store(Request $request)
      {
+          
           try {
                // Validate the incoming request
                $validator = Validator::make($request->all(), [
@@ -192,6 +193,7 @@ class PropertyController extends Controller
                     'bathrooms' => 'required|integer',
                     'size' => 'required|numeric',
                     'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048', // Validate image file
+                    'sub_images' => 'required|array|min:1',
                     'sub_images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048', // Validate multiple sub-images
                     'description' => 'required|string',
                     'address' => 'required|string',
@@ -239,7 +241,7 @@ class PropertyController extends Controller
                ]);
 
                // Update user type to 3
-               User::where('id', $userId)->update(['user_type' => 3]);
+               User::where('id', $userId)->update(['type' => 3]);
 
                $subImages = [];
                if ($request->hasFile('sub_images')) {
