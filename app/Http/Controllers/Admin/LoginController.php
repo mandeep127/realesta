@@ -11,37 +11,44 @@ use App\Models\User;
 class LoginController extends Controller
 {
     //? Admin login API
-
     public function login(Request $request)
     {
-        try {
-            $validator = Validator::make($request->all(), [
-                'email' => 'required|string|email',
-                'password' => 'required|string',
-            ]);
+        // Define validation rules
+        $rules = [
+            'email' => 'required|string|email',
+            'password' => 'required|string',
+        ];
 
-            if ($validator->fails()) {
-                return response()->json([
-                    'message' => 'Validation error',
-                    'code' => 422,
-                    'errors' => $validator->errors(),
-                    'data' => [],
-                ], 422);
-            }
+        // Validate the request
+        $validator = Validator::make($request->all(), $rules);
 
-            $credentials = $request->only('email', 'password');
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation error',
+                'code' => 422,
+                'errors' => $validator->errors(),
+                'data' => [],
+            ], 422);
+        }
 
-            if (!Auth::attempt($credentials)) {
-                return response()->json([
-                    'message' => 'Invalid credentials',
-                    'code' => 401,
-                    'data' => [],
-                ], 401);
-            }
+        // Extract credentials
+        $credentials = $request->only('email', 'password');
 
-            // Get the authenticated user
-            $user = Auth::user();
-            $token = $user->createToken('Personal Access Token')->accessToken;    // Generate a token
+        // Attempt to authenticate the user
+        if (!Auth::attempt($credentials)) {
+            return response()->json([
+                'message' => 'Invalid credentials',
+                'code' => 401,
+                'data' => [],
+            ], 401);
+        }
+
+        // Get the authenticated user
+        $user = Auth::user();
+
+        // Check if the user is an admin
+        if ($user->hasRole('Admin')) {
+            $token = $user->createToken('adminToken')->accessToken;
 
             return response()->json([
                 'message' => 'Login successful!',
@@ -51,15 +58,16 @@ class LoginController extends Controller
                     'token' => $token,
                 ],
             ], 200);
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'An error occurred',
-                'code' => 500,
-                'errors' => $e->getMessage(),
-                'data' => [],
-            ], 500);
         }
+
+        // If the user is not an admin
+        return response()->json([
+            'message' => 'User is not an admin.',
+            'code' => 403,
+            'data' => [],
+        ], 403);
     }
+
     //? logout API
     public function logout(Request $request)
     {
@@ -83,6 +91,39 @@ class LoginController extends Controller
             return response()->json([
                 'error' => 'Internal Server Error!',
                 'code' => 500
+            ], 500);
+        }
+    }
+
+    //profile
+    public function showAdminProfile(Request $request)
+    {
+        try {
+            $user = Auth::user();
+
+            if (!$user) {
+                return response()->json([
+                    'error' => 'Admin not found.',
+                    'code' => 404,
+                ], 404);
+            }
+
+            return response()->json([
+                'message' => 'Admin profile fetched successfully.',
+                'code' => 200,
+                'data' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'created_at' => $user->created_at->toDateTimeString(),
+                    'updated_at' => $user->updated_at->toDateTimeString(),
+                ],
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'An error occurred while fetching the Admin profile.',
+                'code' => 500,
+                'message' => $e->getMessage(),
             ], 500);
         }
     }

@@ -14,6 +14,8 @@ use Illuminate\Validation\ValidationException;
 use App\Models\User;
 use Spatie\Permission\Models\Role;
 use Exception;
+use Illuminate\Support\Facades\Log;
+use Laravel\Passport\Token;
 
 class AuthController extends Controller
 {
@@ -21,7 +23,9 @@ class AuthController extends Controller
      {
           try {
                $validator = Validator::make($request->all(), [
-                    'name' => 'required', 'string', 'max:255',
+                    'name' => 'required',
+                    'string',
+                    'max:255',
                     'email' => 'required|string|email|unique:users',
                     'password' => 'required|string|min:6',
                     'confirm_password' => 'required_with:password|same:password',
@@ -64,50 +68,53 @@ class AuthController extends Controller
 
      public function loginSubmit(Request $request)
      {
-          try {
-               $validator = Validator::make($request->all(), [
-                    'email' => 'required|string|email',
-                    'password' => 'required|string',
-               ]);
+          $validator = Validator::make($request->all(), [
+               'email' => 'required|string|email',
+               'password' => 'required|string|min:6',
+          ]);
 
-               if ($validator->fails()) {
+          if ($validator->fails()) {
+               return response()->json([
+                    'error' => $validator->errors()->first(),
+                    'code' => 422,
+                    'data' => [],
+               ], 422);
+          }
+
+          $credentials = [
+               'email' => $request->email,
+               'password' => $request->password,
+          ];
+
+          if (Auth::attempt($credentials)) {
+               $user = Auth::user();
+
+
+               if ($user->hasRole('User')) {
+                    $token = $user->createToken('authToken')->accessToken;
+                    $success = [
+                         'token' => $token,
+                         'user' => $user
+                    ];
+
                     return response()->json([
-                         'message' => 'Validation error',
-                         'code' => 422,
-                         'errors' => $validator->errors(),
-                         'data' => [],
-                    ], 422);
-               }
-
-               $credentials = $request->only('email', 'password');
-
-               if (!Auth::attempt($credentials)) {
+                         'message' => 'Login successful!',
+                         'code' => 200,
+                         'data' => $success,
+                    ]);
+               } else {
                     return response()->json([
-                         'message' => 'Invalid credentials',
+                         'message' => 'Unauthorized',
                          'code' => 401,
                          'data' => [],
                     ], 401);
                }
-
-               // Get the authenticated user
-               $user = Auth::user();
-               $token = $user->createToken('Personal Access Token')->accessToken;    // Generate a token
-
+          } else {
                return response()->json([
-                    'message' => 'Login successful!',
-                    'code' => 200,
-                    'data' => [
-                         'user' => $user,
-                         'token' => $token,
-                    ],
-               ], 200);
-          } catch (Exception $e) {
-               return response()->json([
-                    'message' => 'An error occurred',
-                    'code' => 500,
-                    'errors' => $e->getMessage(),
+                    'message' => 'Invalid credentials.',
+                    'code' => 400,
                     'data' => [],
-               ], 500);
+               ], 400);
           }
      }
 
@@ -123,20 +130,25 @@ class AuthController extends Controller
                          'code' => 404
                     ], 404);
                }
-               $user->token()->revoke();
-               Auth::logout();
+
+               // Revoke the user's token
+               $user->tokens->each(function ($token) {
+                    $token->delete();
+               });
 
                return response()->json([
                     'message' => 'Logged out successfully.',
                     'code' => 200
                ], 200);
-          } catch (Exception $e) {
+          } catch (\Exception $e) {
+               Log::error('Logout error: ' . $e->getMessage());
                return response()->json([
-                    'error' => 'Internal Server Error!',
+                    'error' => 'Internal Server Error! ' . $e->getMessage(),
                     'code' => 500
                ], 500);
           }
      }
+
 
      //? Change password API
      public function changePassword(Request $request)
@@ -294,6 +306,39 @@ class AuthController extends Controller
                     'message' => $e->getMessage(),
                     'code' => 500,
                     'data' => [],
+               ], 500);
+          }
+     }
+
+     //user Profile
+     public function showProfile(Request $request)
+     {
+          try {
+               $user = Auth::user();
+
+               if (!$user) {
+                    return response()->json([
+                         'error' => 'User not found.',
+                         'code' => 404,
+                    ], 404);
+               }
+
+               return response()->json([
+                    'message' => 'User profile fetched successfully.',
+                    'code' => 200,
+                    'data' => [
+                         'id' => $user->id,
+                         'name' => $user->name,
+                         'email' => $user->email,
+                         'created_at' => $user->created_at->toDateTimeString(),
+                         'updated_at' => $user->updated_at->toDateTimeString(),
+                    ],
+               ], 200);
+          } catch (\Exception $e) {
+               return response()->json([
+                    'error' => 'An error occurred while fetching the user profile.',
+                    'code' => 500,
+                    'message' => $e->getMessage(),
                ], 500);
           }
      }
