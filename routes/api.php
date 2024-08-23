@@ -67,10 +67,12 @@ Route::group(['middleware' => ['auth:api']], function () {
           Route::get('/admin/user/{id}', [AdminController::class, 'showUserDetails']);
           //fetchBuyerUsers
           Route::get('/admin/users', [AdminController::class, 'fetchUsers']);
+
+          //adminProfileDetails 
+          Route::get('/admin-profile', [LoginController::class, 'adminProfile']);
           //fetchSellerUsers
           // Route::get('/admin/users/Seller', [AdminController::class, 'fetchSellerUsers']);
-          //adminProfileDetails
-          Route::get('/admin/profile', [LoginController::class, 'showAdminProfile']);
+
      });
 });
 Route::post('/admin/login', [LoginController::class, 'login']);

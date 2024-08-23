@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
+use Illuminate\Support\Facades\Log;
+
 
 class LoginController extends Controller
 {
@@ -76,54 +78,90 @@ class LoginController extends Controller
 
             if (!$user) {
                 return response()->json([
-                    'error' => 'Admin not found.',
+                    'error' => 'User not found.',
                     'code' => 404
                 ], 404);
             }
-            $user->token()->revoke();
-            Auth::logout();
+
+            // Revoke all of the user's tokens
+            $user->tokens()->delete();
 
             return response()->json([
                 'message' => 'Logged out successfully.',
                 'code' => 200
             ], 200);
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
+            Log::error('Logout error: ' . $e->getMessage());
             return response()->json([
-                'error' => 'Internal Server Error!',
+                'error' => 'Internal Server Error! ' . $e->getMessage(),
                 'code' => 500
             ], 500);
         }
     }
-
-    //profile
-    public function showAdminProfile(Request $request)
+    public function adminProfile()
     {
         try {
-            $user = Auth::user();
 
-            if (!$user) {
+            $admin = auth()->user();
+
+            if (!$admin) {
                 return response()->json([
-                    'error' => 'Admin not found.',
+                    'message' => 'Admin not found',
                     'code' => 404,
+                    'data' => [],
                 ], 404);
             }
 
             return response()->json([
-                'message' => 'Admin profile fetched successfully.',
+                'message' => 'Successfully fetched admin profile',
                 'code' => 200,
-                'data' => [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'created_at' => $user->created_at->toDateTimeString(),
-                    'updated_at' => $user->updated_at->toDateTimeString(),
-                ],
-            ], 200);
+                'data' => $admin,
+            ]);
         } catch (\Exception $e) {
             return response()->json([
-                'error' => 'An error occurred while fetching the Admin profile.',
+                'message' => 'An error occurred while fetching the admin profile.',
                 'code' => 500,
-                'message' => $e->getMessage(),
+                'error' => $e->getMessage(),
+                'data' => [],
+            ], 500);
+        }
+    }
+
+    public function Pro(Request $request)
+    {
+        try {
+            $perPage = 10;
+            $currentPage = $request->input('page', 1);
+
+            $users = User::whereIn('type', [2, 3])
+                ->paginate($perPage, ['*'], 'page', $currentPage);
+
+            return response()->json([
+                'msg' => 'Users fetched successfully!',
+                'code' => 200,
+                'data' => [
+                    'users' => $users->items(),
+                    'pagination' => [
+                        'total' => $users->total(),
+                        'current_page' => $users->currentPage(),
+                        'last_page' => $users->lastPage(),
+                        'per_page' => $users->perPage(),
+                    ],
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'msg' => 'An unexpected error occurred',
+                'code' => 500,
+                'data' => [
+                    'users' => [],
+                    'pagination' => [
+                        'total' => 0,
+                        'current_page' => 1,
+                        'last_page' => 1,
+                        'per_page' => 10,
+                    ],
+                ],
             ], 500);
         }
     }

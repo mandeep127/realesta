@@ -167,7 +167,7 @@ class PropertyController extends Controller
 
      public function store(Request $request)
      {
-          
+
           try {
                // Validate the incoming request
                $validator = Validator::make($request->all(), [
@@ -375,9 +375,8 @@ class PropertyController extends Controller
                $propertyTypeId = $request->input('property_type_id', '');
 
                // Start the query
-               $query = Property::query();
+               $query = Property::where('status', 1);
 
-               // Filter by property type if provided and not empty
                if (!empty($propertyTypeId)) {
                     $query->where('property_type_id', $propertyTypeId);
                }
@@ -392,9 +391,6 @@ class PropertyController extends Controller
                               ->orWhere('country', 'LIKE', "%{$keyword}%");
                     });
                }
-
-               // Optionally, log the query for debugging
-               // \Log::info('Property Query: ' . $query->toSql(), $query->getBindings());
 
                // Execute the query
                $properties = $query->get();

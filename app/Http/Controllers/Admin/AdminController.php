@@ -31,6 +31,9 @@ class AdminController extends Controller
                 ->limit(10) // Limit the results to 10
                 ->get();
 
+            $totalPropertiesCount = Property::count();
+            $totalUsersCount = User::where('type', '<>', '1')
+                ->count();
 
             return response()->json([
                 'msg' => 'New properties and users fetched successfully!',
@@ -38,6 +41,8 @@ class AdminController extends Controller
                 'data' => [
                     'properties' => $properties,
                     'users' => $users,
+                    'properties_count' => $totalPropertiesCount,
+                    'users_count' => $totalUsersCount,
                 ],
             ]);
         } catch (\Exception $e) {
@@ -51,6 +56,9 @@ class AdminController extends Controller
             ], 500);
         }
     }
+
+
+
 
     // property section view active property
     public function activeProperty()

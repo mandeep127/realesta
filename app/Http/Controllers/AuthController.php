@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\Property;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
@@ -135,7 +136,7 @@ class AuthController extends Controller
                $user->tokens->each(function ($token) {
                     $token->delete();
                });
-
+               Auth::logout();
                return response()->json([
                     'message' => 'Logged out successfully.',
                     'code' => 200
@@ -323,6 +324,9 @@ class AuthController extends Controller
                     ], 404);
                }
 
+               // Fetch properties associated with the user
+               $properties = Property::where('user_id', $user->id)->get();
+
                return response()->json([
                     'message' => 'User profile fetched successfully.',
                     'code' => 200,
@@ -332,6 +336,7 @@ class AuthController extends Controller
                          'email' => $user->email,
                          'created_at' => $user->created_at->toDateTimeString(),
                          'updated_at' => $user->updated_at->toDateTimeString(),
+                         'properties' => $properties,
                     ],
                ], 200);
           } catch (\Exception $e) {
