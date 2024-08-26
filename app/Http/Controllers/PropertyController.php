@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Validator;
 use App\Models\PropertyType;
 use App\Models\SubImages;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
+use Spatie\Permission\Models\Role;
 
 class PropertyController extends Controller
 {
@@ -169,6 +171,12 @@ class PropertyController extends Controller
      {
 
           try {
+               // $user =  Auth::user();
+               // if ($user) {
+               //      dd($user); 
+               // } else {
+               //      dd('User is null.'); 
+               // }
                // Validate the incoming request
                $validator = Validator::make($request->all(), [
                     'property_type_id' => 'required|string',
@@ -176,10 +184,10 @@ class PropertyController extends Controller
                     'bedrooms' => 'required|integer',
                     'bathrooms' => 'required|integer',
                     'size' => 'required|numeric',
-                    'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048', // Validate image file
+                    'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
                     'sub_images' => 'required|array|min:1',
-                    'sub_images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048', // Validate multiple sub-images
-                    'description' => 'required|string',
+                    'sub_images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+                    'description' => 'required|string|max:500',
                     'address' => 'required|string',
                     'city' => 'required|string',
                     'state' => 'required|string',
@@ -192,8 +200,11 @@ class PropertyController extends Controller
                     throw new ValidationException($validator);
                }
 
-               // Dummy user ID
-               $userId = 1; // Replace with your actual logic to fetch the user ID
+               $userId = Auth::id();
+               // $userId = 1;
+               if (!$userId) {
+                    throw new \Exception('User not authenticated.');
+               }
 
                // Handle main image upload
                $mainImagePath = null;

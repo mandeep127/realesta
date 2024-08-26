@@ -22,7 +22,7 @@ return new class extends Migration
             $table->string("bathrooms");
             $table->string("size");
             $table->string("image");
-            $table->string("description");
+            $table->text('description');
             $table->string("address");
             $table->string("city");
             $table->string("state");

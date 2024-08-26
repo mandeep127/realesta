@@ -43,6 +43,7 @@ class AuthController extends Controller
 
                $password = Hash::make($request->password);
                $user = User::create([
+                    'name' => $request->name,
                     'email' => $request->email,
                     'password' => $password,
                ]);
@@ -136,7 +137,7 @@ class AuthController extends Controller
                $user->tokens->each(function ($token) {
                     $token->delete();
                });
-               Auth::logout();
+               // Auth::logout();
                return response()->json([
                     'message' => 'Logged out successfully.',
                     'code' => 200
@@ -346,5 +347,11 @@ class AuthController extends Controller
                     'message' => $e->getMessage(),
                ], 500);
           }
+     }
+
+     public function test(Request $request)
+     {
+          $user = Auth::user();
+          dd($user);
      }
 }

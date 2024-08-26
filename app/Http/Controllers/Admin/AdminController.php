@@ -182,12 +182,12 @@ class AdminController extends Controller
             if (!$user) {
                 return response()->json([
                     'msg' => 'User associated with the property not found',
-                    'code' => 404,
+                    'code' => 200,
                     'data' => [
                         'property' => $property,
                         'user' => null,
                     ],
-                ], 404);
+                ], 200);
             }
 
             // Return property and user details

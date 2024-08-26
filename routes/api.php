@@ -31,8 +31,7 @@ Route::get("/home", [PropertyController::class, 'index']);
 // Route::get("/property", [PropertyController::class, 'show']);
 // Route::get("/property/{address}/{id}", [PropertyController::class, 'details']);
 Route::get("/property/{id}", [PropertyController::class, 'details']);
-//add properties
-Route::post("/add-property", [PropertyController::class, 'store']);
+
 //property-types
 Route::get("/property-types", [PropertyController::class, 'propertyTypes']);
 //filterProperties
@@ -42,8 +41,9 @@ Route::get("/filter-properties", [PropertyController::class, 'filterProperties']
 Route::group(['middleware' => ['auth:api']], function () {
      Route::group(['middleware' => ['role:User']], function () {
 
+          //add properties
+          Route::post("/add-property", [PropertyController::class, 'store']);
           Route::post('/change-password', [AuthController::class, 'changePassword']);
-
           Route::post('/logout', [AuthController::class, 'logoutSubmit']);
           //showProfile
           Route::get('/profile', [AuthController::class, 'showProfile']);
