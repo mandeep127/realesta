@@ -46,6 +46,7 @@ class AuthController extends Controller
                     'name' => $request->name,
                     'email' => $request->email,
                     'password' => $password,
+                    'type' => '2',
                ]);
                $role = Role::findByName('User', 'Api');
                $user->assignRole($role);

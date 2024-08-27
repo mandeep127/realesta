@@ -39,11 +39,11 @@ Route::get("/filter-properties", [PropertyController::class, 'filterProperties']
 
 
 Route::group(['middleware' => ['auth:api']], function () {
+     Route::post('/change-password', [AuthController::class, 'changePassword']);
      Route::group(['middleware' => ['role:User']], function () {
 
           //add properties
           Route::post("/add-property", [PropertyController::class, 'store']);
-          Route::post('/change-password', [AuthController::class, 'changePassword']);
           Route::post('/logout', [AuthController::class, 'logoutSubmit']);
           //showProfile
           Route::get('/profile', [AuthController::class, 'showProfile']);

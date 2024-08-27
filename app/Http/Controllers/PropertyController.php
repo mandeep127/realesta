@@ -386,7 +386,8 @@ class PropertyController extends Controller
                $propertyTypeId = $request->input('property_type_id', '');
 
                // Start the query
-               $query = Property::where('status', 1);
+               // $query = Property::where('status', 0);  //1
+               $query = Property::query();
 
                if (!empty($propertyTypeId)) {
                     $query->where('property_type_id', $propertyTypeId);
